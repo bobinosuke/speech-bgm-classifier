@@ -3,8 +3,8 @@ import os
 from keras.callbacks import EarlyStopping
 
 # データセットのパス
-speech_dir = 'speech'
-speech_withBGM_dir = 'speech_withBGM'
+speech_dir = 'training_data\speech'
+speech_withBGM_dir = 'training_data\speech_withBGM'
 
 # データセットの読み込みとラベル付け
 audio_files = []
