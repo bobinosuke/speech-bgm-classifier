@@ -5,7 +5,7 @@ from keras.models import load_model
 
 # モデルとデータのパス
 model_path = 'speech_classification_model.h5'
-input_dir = 'wavs'  # 仕分けるファイルがあるフォルダのパス
+input_dir = 'input'  # 仕分けるファイルがあるフォルダのパス
 output_dir = 'output'  # 仕分けたファイルを保存するフォルダのパス
 
 # 出力フォルダ内にspeechとspeech_withBGMフォルダを作成
