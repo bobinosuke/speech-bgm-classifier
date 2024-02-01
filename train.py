@@ -3,8 +3,8 @@ import os
 from keras.callbacks import EarlyStopping
 
 # データセットのパス
-speech_dir = 'training_data\speech'
-speech_withBGM_dir = 'training_data\speech_withBGM'
+speech_dir = 'training_data/speech'
+speech_withBGM_dir = 'training_data/speech_withBGM'
 
 # データセットの読み込みとラベル付け
 audio_files = []
@@ -27,8 +27,9 @@ X_mel_train, X_mel_test, X_zcr_train, X_zcr_test, y_train, y_test = preprocess_d
 
 # モデルの構築
 # メルスペクトログラム特徴量とZCR特徴量の形状を取得
-input_shape_mel = X_mel_train.shape[1]  # 1次元の形状
-input_shape_zcr = X_zcr_train.shape[1]  # 1次元の形状
+# 形状の指定には、時間軸を含む全ての次元を指定する
+input_shape_mel = X_mel_train.shape[1:]  # 時間軸を含む形状
+input_shape_zcr = X_zcr_train.shape[1:]  # 時間軸を含む形状
 num_classes = 2  # クリーンな発話とBGMがかぶさった発話の2クラス
 
 # モデル構築関数の呼び出し
@@ -37,7 +38,7 @@ model = build_model(input_shape_mel, input_shape_zcr, num_classes)
 # 早期停止のコールバックを設定
 early_stopping = EarlyStopping(
     monitor='val_loss',  # 監視する値
-    patience=200,        # 指定したエポック数以上改善がない場合に訓練を停止
+    patience=10,        # 指定したエポック数以上改善がない場合に訓練を停止
     verbose=1,           # 早期停止時にメッセージを出力
     restore_best_weights=True  # 最も良いモデルの重みを復元
 )

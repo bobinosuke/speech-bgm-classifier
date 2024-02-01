@@ -2,6 +2,7 @@ import os
 import numpy as np
 import librosa
 from keras.models import load_model
+from keras.preprocessing.sequence import pad_sequences
 
 # モデルとデータのパス
 model_path = 'speech_classification_model.h5'
@@ -19,23 +20,28 @@ os.makedirs(speech_withBGM_dir, exist_ok=True)
 model = load_model(model_path)
 
 # 音声データの前処理関数
-def preprocess_file(file_path, n_mels=128):
+def preprocess_file(file_path, n_mels=128, max_pad_len=32):
     signal, sr = librosa.load(file_path, sr=None)
     mel = librosa.feature.melspectrogram(y=signal, sr=sr, n_mels=n_mels)
     mel_db = librosa.power_to_db(mel, ref=np.max)
-    mel_db_mean = np.mean(mel_db, axis=1)
     zcr = librosa.feature.zero_crossing_rate(signal)[0]
-    zcr_mean = np.mean(zcr)
-    X_mel = (mel_db_mean - np.min(mel_db_mean)) / (np.max(mel_db_mean) - np.min(mel_db_mean))
-    X_zcr = (zcr_mean - np.min(zcr_mean)) / (np.max(zcr_mean) - np.min(zcr_mean))
-    return np.array([X_mel]), np.array([[X_zcr]])
+
+    # パディング処理
+    mel_db_padded = pad_sequences([mel_db.T], maxlen=max_pad_len, dtype='float32', padding='post', truncating='post', value=0)
+    zcr_padded = pad_sequences([zcr.reshape(-1, 1)], maxlen=max_pad_len, dtype='float32', padding='post', truncating='post', value=0)
+
+    # 正規化処理
+    mel_db_padded = (mel_db_padded - np.min(mel_db_padded)) / (np.max(mel_db_padded) - np.min(mel_db_padded))
+    zcr_padded = (zcr_padded - np.min(zcr_padded)) / (np.max(zcr_padded) - np.min(zcr_padded))
+
+    return mel_db_padded[0], zcr_padded[0]
 
 # ファイルの仕分け
 for filename in os.listdir(input_dir):
     if filename.endswith('.wav'):
         file_path = os.path.join(input_dir, filename)
         X_mel, X_zcr = preprocess_file(file_path)
-        prediction = model.predict([X_mel, X_zcr])
+        prediction = model.predict([np.expand_dims(X_mel, axis=0), np.expand_dims(X_zcr, axis=0)])
         predicted_label = np.argmax(prediction, axis=1)[0]
         
         # 予測されたラベルに基づいてファイルを移動
